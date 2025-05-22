@@ -1,0 +1,49 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <TableLayout
+        android:id="@+id/tableLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="*"
+        android:divider="?android:attr/dividerHorizontal"
+        android:showDividers="middle">
+
+        <!-- Заголовки таблицы -->
+        <TableRow>
+            <TextView
+                android:text="ID"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:background="#DDDDDD"/>
+            <TextView
+                android:text="Имя"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:background="#DDDDDD"/>
+            <TextView
+                android:text="Тип"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:background="#DDDDDD"/>
+            <TextView
+                android:text="Сумма"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:background="#DDDDDD"/>
+            <TextView
+                android:text="Дата"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:background="#DDDDDD"/>
+            <TextView
+                android:text="Описание"
+                android:textStyle="bold"
+                android:padding="4dp"
+                android:background="#DDDDDD"/>
+        </TableRow>
+        <!-- Здесь будут строки с данными -->
+    </TableLayout>
+</ScrollView>
