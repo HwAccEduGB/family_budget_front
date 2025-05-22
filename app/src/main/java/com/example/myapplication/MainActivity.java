@@ -80,13 +80,8 @@ public class MainActivity extends AppCompatActivity {
                     ? account.getDisplayName()
                     : "Google User";
 
-            // Передаете имя в следующую активность
-            Intent intent = new Intent(MainActivity.this, MainPageActivity.class);
-            intent.putExtra("username", userName);
-            startActivity(intent);
-            finish();
-            String idToken = account.getIdToken();
 
+            String idToken = account.getIdToken();
             if (idToken == null) {
                 Toast.makeText(this, "Не удалось получить токен", Toast.LENGTH_SHORT).show();
                 return;
