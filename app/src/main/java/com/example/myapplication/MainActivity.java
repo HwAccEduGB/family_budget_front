@@ -36,10 +36,10 @@ public class MainActivity extends AppCompatActivity {
 
         buttonGoogleSignIn = findViewById(R.id.buttonGoogleSignIn);
         buttonStart = findViewById(R.id.buttonStart);
-        EditText editTextUserName = findViewById(R.id.editTextUserName);
+//        EditText editTextUserName = findViewById(R.id.editTextUserName);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("ВАШ_CLIENT_ID")
+                .requestIdToken("124978209029-lmloik8mu5l0k3ut52s33qhl7phamilb.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
 
@@ -52,16 +52,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Обработка входа через "Старт"
-        buttonStart.setOnClickListener(v -> {
-            String userName = editTextUserName.getText().toString().trim();
-            if (!userName.isEmpty()) {
-                Intent intent = new Intent(MainActivity.this, MainPageActivity.class);
-                intent.putExtra("username", userName);
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, "Введите имя", Toast.LENGTH_SHORT).show();
-            }
-        });
+//        buttonStart.setOnClickListener(v -> {
+//            String userName = editTextUserName.getText().toString().trim();
+//            if (!userName.isEmpty()) {
+//                Intent intent = new Intent(MainActivity.this, MainPageActivity.class);
+//                intent.putExtra("username", userName);
+//                startActivity(intent);
+//            } else {
+//                Toast.makeText(this, "Введите имя", Toast.LENGTH_SHORT).show();
+//            }
+//        });
     }
 
     @Override
@@ -76,6 +76,15 @@ public class MainActivity extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            String userName = (account != null && account.getDisplayName() != null)
+                    ? account.getDisplayName()
+                    : "Google User";
+
+            // Передаете имя в следующую активность
+            Intent intent = new Intent(MainActivity.this, MainPageActivity.class);
+            intent.putExtra("username", userName);
+            startActivity(intent);
+            finish();
             String idToken = account.getIdToken();
 
             if (idToken == null) {

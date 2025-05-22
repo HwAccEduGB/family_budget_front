@@ -32,6 +32,14 @@ public class MainPageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_page);
 
+        String userName = getIntent().getStringExtra("username");
+        if (userName == null || userName.isEmpty()) {
+            userName = "Неизвестный пользователь";
+        }
+
+        // Теперь используйте userName везде
+        this.userName = userName;
+
         userName = getIntent().getStringExtra("username");
         textViewBalance = findViewById(R.id.textViewBalance);
 
