@@ -76,10 +76,10 @@ public class MainActivity extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            // В этом месте — если исключение не выброшено, авторизация прошла успешно
             String userName = (account != null && account.getDisplayName() != null)
                     ? account.getDisplayName()
                     : "Google User";
-
 
             String idToken = account.getIdToken();
             if (idToken == null) {
@@ -87,25 +87,19 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            // Проверка токена на сервере
+            // Вызов API для проверки токена
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl("https://80.87.196.155:8081/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 
             ApiService apiService = retrofit.create(ApiService.class);
-
             Call<ResponseModel> call = apiService.sendGoogleToken(new GoogleAuthRequest(idToken));
             call.enqueue(new retrofit2.Callback<ResponseModel>() {
                 @Override
                 public void onResponse(Call<ResponseModel> call, Response<ResponseModel> response) {
                     if (response.isSuccessful()) {
-                        // Получаем имя из аккаунта Google
-                        String userName = (account != null && account.getDisplayName() != null)
-                                ? account.getDisplayName()
-                                : "Google User";
-
-                        // Переходим к MainPage с именем
+                        // Проверка прошла успешно — переходим дальше
                         Intent intent = new Intent(MainActivity.this, MainPageActivity.class);
                         intent.putExtra("username", userName);
                         startActivity(intent);
@@ -121,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         } catch (ApiException e) {
+            // Обработка исключения — выводим сообщение
             Toast.makeText(this, "Ошибка входа: " + e.getStatusCode(), Toast.LENGTH_SHORT).show();
         }
     }
