@@ -1,11 +1,13 @@
 package com.example.myapplication;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
+import android.util.Log;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.model.GoogleAuthRequest;
@@ -20,48 +22,40 @@ import com.google.android.gms.tasks.Task;
 
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static final int RC_SIGN_IN = 9001;
     private GoogleSignInClient mGoogleSignInClient;
-    private Button  buttonStart;
     private SignInButton buttonGoogleSignIn;
+    private ActivityResultLauncher<Intent> signInLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        signInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(result.getData()));
+                    }
+                }
+        );
+
         buttonGoogleSignIn = findViewById(R.id.buttonGoogleSignIn);
-        buttonStart = findViewById(R.id.buttonStart);
-//        EditText editTextUserName = findViewById(R.id.editTextUserName);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("124978209029-lmloik8mu5l0k3ut52s33qhl7phamilb.apps.googleusercontent.com")
+                .requestIdToken("124978209029-jpf8hdr2t4q34tlpi8ms156jifkkonnl.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        // Обработка входа через Google
         buttonGoogleSignIn.setOnClickListener(v -> {
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-            startActivityForResult(signInIntent, RC_SIGN_IN);
+            signInLauncher.launch(signInIntent);
         });
-
-        // Обработка входа через "Старт"
-//        buttonStart.setOnClickListener(v -> {
-//            String userName = editTextUserName.getText().toString().trim();
-//            if (!userName.isEmpty()) {
-//                Intent intent = new Intent(MainActivity.this, MainPageActivity.class);
-//                intent.putExtra("username", userName);
-//                startActivity(intent);
-//            } else {
-//                Toast.makeText(this, "Введите имя", Toast.LENGTH_SHORT).show();
-//            }
-//        });
     }
 
     @Override
@@ -76,7 +70,11 @@ public class MainActivity extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-            // В этом месте — если исключение не выброшено, авторизация прошла успешно
+
+            Log.d("GoogleAuth", "Account: " + account);
+            Log.d("GoogleAuth", "Email: " + account.getEmail());
+            Log.d("GoogleAuth", "Token length: " + (account.getIdToken() != null ? account.getIdToken().length() : "null"));
+
             String userName = (account != null && account.getDisplayName() != null)
                     ? account.getDisplayName()
                     : "Google User";
@@ -87,21 +85,21 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            // Вызов API для проверки токена
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("https://80.87.196.155:8081/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-
-            ApiService apiService = retrofit.create(ApiService.class);
+            ApiService apiService = ApiClient.getRetrofit().create(ApiService.class);
             Call<ResponseModel> call = apiService.sendGoogleToken(new GoogleAuthRequest(idToken));
             call.enqueue(new retrofit2.Callback<ResponseModel>() {
                 @Override
                 public void onResponse(Call<ResponseModel> call, Response<ResponseModel> response) {
-                    if (response.isSuccessful()) {
-                        // Проверка прошла успешно — переходим дальше
+                    if (response.isSuccessful() && response.body() != null) {
+                        ResponseModel resp = response.body();
+
+                        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+                        prefs.edit()
+                                .putLong("user_id", resp.getUserId())
+                                .apply();
+
                         Intent intent = new Intent(MainActivity.this, MainPageActivity.class);
-                        intent.putExtra("username", userName);
+                        intent.putExtra("username", account.getDisplayName());
                         startActivity(intent);
                         finish();
                     } else {
@@ -115,8 +113,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         } catch (ApiException e) {
-            // Обработка исключения — выводим сообщение
+            Log.e("GoogleAuth", "Sign-in failed. Code: " + e.getStatusCode() + ", Message: " + e.getMessage());
             Toast.makeText(this, "Ошибка входа: " + e.getStatusCode(), Toast.LENGTH_SHORT).show();
         }
     }
+
 }
